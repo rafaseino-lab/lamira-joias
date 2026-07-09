@@ -71,6 +71,16 @@
   <div class="wm-sub">JOIAS E PIERCING</div>
 </header>
 
+<div id="lock" style="position:fixed;inset:0;background:var(--blush);display:none;align-items:center;justify-content:center;z-index:50;padding:20px">
+  <div class="card" style="max-width:320px;width:100%;text-align:center">
+    <div class="wm-main" style="font-size:30px">LAMIRA</div>
+    <p class="muted" style="margin-top:6px">Digite seu PIN de acesso</p>
+    <input type="password" id="lock-pin" inputmode="numeric" placeholder="••••" style="text-align:center;font-size:20px;letter-spacing:6px;margin-top:8px" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <div style="margin-top:14px"><button class="btn" onclick="tryUnlock()">Entrar</button></div>
+    <p id="lock-err" style="color:var(--red);font-size:13px;margin-top:8px"></p>
+  </div>
+</div>
+
 <nav>
   <button data-tab="venda" class="active">➕ Nova venda</button>
   <button data-tab="caixa">💰 Caixa</button>
@@ -80,6 +90,7 @@
   <button data-tab="provador">👂 Provador</button>
   <button data-tab="historico">📋 Histórico</button>
   <button data-tab="config">⚙️ Config</button>
+  <button id="nav-logout" onclick="logoutRole()" style="display:none;margin-left:auto;color:var(--rose-dark)">🔒 Sair</button>
 </nav>
 
 <main>
@@ -93,12 +104,18 @@
           <input type="date" id="v-data">
         </div>
         <div>
+          <label>Serviço (preço base)</label>
+          <select id="v-servico"><option value="">— selecionar —</option></select>
+        </div>
+        <div>
           <label>Tipo</label>
           <select id="v-tipo">
             <option value="Joia">Joia</option>
             <option value="Piercing">Piercing (peça)</option>
             <option value="Perfuração">Perfuração (furo)</option>
             <option value="Tatuagem">Tatuagem</option>
+            <option value="Terapia">Terapia</option>
+            <option value="Procedimento">Procedimento</option>
           </select>
         </div>
         <div>
@@ -301,6 +318,15 @@
   <!-- ===== CONFIG ===== -->
   <section id="config" class="tab">
     <div class="card">
+      <h2>🔒 Acesso — CEO x Funcionária</h2>
+      <div class="grid">
+        <div><label>PIN do CEO (acesso total)</label><input type="text" id="cfg-admin-pin" inputmode="numeric" placeholder="ex: 2580"></div>
+        <div><label>PIN da funcionária (só vendas e provador)</label><input type="text" id="cfg-func-pin" inputmode="numeric" placeholder="ex: 1111"></div>
+      </div>
+      <p class="muted" style="margin-top:8px">Defina o <b>PIN do CEO</b> para ativar a proteção. Com o PIN da funcionária, ela vê só <b>Nova venda</b> e <b>Provador</b> — sem caixa, comissões, relatório, estoque ou config. Guarde bem o PIN do CEO.</p>
+      <div style="margin-top:12px"><button class="btn" onclick="salvarPins()">Salvar acesso</button></div>
+    </div>
+    <div class="card">
       <h2>Funcionárias</h2>
       <div class="row-flex">
         <div style="flex:1"><label>Nome</label><input type="text" id="cfg-func-nome" placeholder="Nome da funcionária"></div>
@@ -317,6 +343,18 @@
         <div><label>Valor tatuagem</label><input type="number" id="cfg-com-tat-val" step="0.01" min="0"></div>
       </div>
       <div style="margin-top:14px"><button class="btn" onclick="salvarConfigComissao()">Salvar regras</button></div>
+    </div>
+    <div class="card">
+      <h2>Tabela de serviços e preços</h2>
+      <p class="muted">Preços base que preenchem a venda automaticamente. Edite o preço direto na tabela.</p>
+      <table><thead><tr><th>Serviço</th><th>Categoria</th><th>Tipo</th><th class="right">Preço</th><th></th></tr></thead>
+      <tbody id="cfg-serv-body"></tbody></table>
+      <div class="row-flex" style="margin-top:12px">
+        <input type="text" id="cfg-serv-nome" placeholder="Novo serviço" style="flex:2;min-width:140px">
+        <input type="text" id="cfg-serv-cat" placeholder="Categoria" style="flex:1;min-width:100px">
+        <input type="number" id="cfg-serv-preco" placeholder="Preço" style="width:90px">
+        <button class="btn sm" onclick="addServico()">Adicionar</button>
+      </div>
     </div>
     <div class="card">
       <h2>Provador com IA (opcional)</h2>
@@ -342,23 +380,69 @@
 const KEY='lamira_joias_v1';
 const money=n=>'$'+(Number(n)||0).toFixed(2);
 const today=()=>new Date().toISOString().slice(0,10);
+const TIPOS=['Joia','Piercing','Perfuração','Tatuagem','Terapia','Procedimento'];
+const DEFAULT_SERVICOS=[
+  {cat:'Piercing',nome:'Furo de orelha (lóbulo)',preco:50,tipo:'Perfuração'},
+  {cat:'Piercing',nome:'Nostril (narina)',preco:50,tipo:'Perfuração'},
+  {cat:'Piercing',nome:'Sobrancelha',preco:50,tipo:'Perfuração'},
+  {cat:'Piercing',nome:'Umbigo',preco:60,tipo:'Perfuração'},
+  {cat:'Piercing',nome:'Septo',preco:60,tipo:'Perfuração'},
+  {cat:'Piercing',nome:'Mamilo',preco:60,tipo:'Perfuração'},
+  {cat:'Piercing',nome:'Boca (oral)',preco:60,tipo:'Perfuração'},
+  {cat:'Terapia',nome:'Laser (luz vermelha)',preco:30,tipo:'Terapia'},
+  {cat:'Procedimento',nome:'Lobuloplastia',preco:600,tipo:'Procedimento'}
+];
 
 let db=load();
 function load(){
-  try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return d;}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem(KEY));if(d){if(!d.config.servicos)d.config.servicos=DEFAULT_SERVICOS;return d;}}catch(e){}
   return {
     vendas:[],
     funcionarias:['Balcão'],
     estoque:[],
-    config:{comPerf:5, tatTipo:'nenhum', tatVal:0, aiUrl:''}
+    config:{comPerf:5, tatTipo:'nenhum', tatVal:0, aiUrl:'', servicos:DEFAULT_SERVICOS, adminPin:'', funcPin:''}
   };
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(db));}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
+/* ---------- ACESSO (CEO x Funcionária) ---------- */
+let role='ceo';
+const FUNC_TABS=['venda','provador'];
+function applyRole(){
+  document.querySelectorAll('nav button[data-tab]').forEach(b=>{
+    b.style.display=(role==='ceo'||FUNC_TABS.includes(b.dataset.tab))?'':'none';
+  });
+  document.getElementById('nav-logout').style.display=db.config.adminPin?'':'none';
+  const active=document.querySelector('nav button[data-tab].active');
+  if(active&&role!=='ceo'&&!FUNC_TABS.includes(active.dataset.tab)){
+    document.querySelector('nav button[data-tab="venda"]').click();
+  }
+}
+function lockApp(){
+  if(!db.config.adminPin){role='ceo';applyRole();return;}
+  document.getElementById('lock').style.display='flex';
+  setTimeout(()=>document.getElementById('lock-pin').focus(),50);
+}
+function tryUnlock(){
+  const p=document.getElementById('lock-pin').value.trim();
+  if(p&&p===db.config.adminPin)role='ceo';
+  else if(p&&db.config.funcPin&&p===db.config.funcPin)role='func';
+  else{document.getElementById('lock-err').textContent='PIN incorreto';return;}
+  document.getElementById('lock').style.display='none';
+  document.getElementById('lock-pin').value='';document.getElementById('lock-err').textContent='';
+  applyRole();
+}
+function logoutRole(){document.getElementById('lock-pin').value='';lockApp();}
+function salvarPins(){
+  db.config.adminPin=document.getElementById('cfg-admin-pin').value.trim();
+  db.config.funcPin=document.getElementById('cfg-func-pin').value.trim();
+  save();applyRole();toast('Acesso salvo ✓');
+}
+
 /* ---------- NAV ---------- */
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('nav button[data-tab]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button[data-tab]').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   document.getElementById(b.dataset.tab).classList.add('active');
@@ -386,6 +470,14 @@ function fillFuncSelects(){
   const opts=db.funcionarias.map(f=>`<option>${f}</option>`).join('');
   document.getElementById('v-func').innerHTML=opts;
 }
+function fillServicoSelect(){
+  const sel=document.getElementById('v-servico');if(!sel)return;
+  const g={};(db.config.servicos||[]).forEach((s,i)=>{(g[s.cat]=g[s.cat]||[]).push({s,i});});
+  let html='<option value="">— selecionar —</option>';
+  Object.keys(g).forEach(cat=>{html+=`<optgroup label="${cat}">`+
+    g[cat].map(o=>`<option value="${o.i}">${o.s.nome} — ${money(o.s.preco)}</option>`).join('')+'</optgroup>';});
+  sel.innerHTML=html;
+}
 function fillEstoqueSelect(){
   const sel=document.getElementById('v-estoque-item');
   sel.innerHTML='<option value="">— não vincular ao estoque —</option>'+
@@ -393,6 +485,13 @@ function fillEstoqueSelect(){
 }
 document.getElementById('v-tipo').onchange=updateVendaUI;
 document.getElementById('v-valor').oninput=updateVendaUI;
+document.getElementById('v-servico').onchange=function(){
+  const s=(db.config.servicos||[])[this.value];if(!s)return;
+  document.getElementById('v-valor').value=s.preco;
+  document.getElementById('v-item').value=s.nome;
+  document.getElementById('v-tipo').value=s.tipo;
+  updateVendaUI();
+};
 document.getElementById('v-estoque-item').onchange=function(){
   const p=db.estoque[this.value];
   if(p)document.getElementById('v-valor').value=p.preco;
@@ -453,7 +552,7 @@ function renderCaixa(){
     const cls=p==='Cartão'?'card':p==='Dinheiro'?'dinheiro':p==='Zelle'?'zelle':'link';
     return `<tr><td><span class="pill ${cls}">${p}</span></td><td class="right">${f.length}</td><td class="right">${money(t)}</td></tr>`;
   }).join('');
-  const tipos=['Joia','Piercing','Perfuração','Tatuagem'];
+  const tipos=TIPOS;
   document.getElementById('cx-tipo').innerHTML=tipos.map(tp=>{
     const f=vs.filter(v=>v.tipo===tp);const t=f.reduce((s,v)=>s+v.valor,0);
     return `<tr><td>${tp}</td><td class="right">${f.length}</td><td class="right">${money(t)}</td></tr>`;
@@ -755,6 +854,27 @@ function renderConfig(){
   document.getElementById('cfg-com-tat-tipo').value=db.config.tatTipo;
   document.getElementById('cfg-com-tat-val').value=db.config.tatVal;
   document.getElementById('cfg-ai-url').value=db.config.aiUrl||'';
+  document.getElementById('cfg-admin-pin').value=db.config.adminPin||'';
+  document.getElementById('cfg-func-pin').value=db.config.funcPin||'';
+  renderServicos();
+}
+function renderServicos(){
+  const b=document.getElementById('cfg-serv-body');if(!b)return;
+  b.innerHTML=(db.config.servicos||[]).map((s,i)=>
+    `<tr><td>${s.nome}</td><td>${s.cat}</td><td>${s.tipo}</td>
+    <td class="right"><input type="number" value="${s.preco}" style="width:80px;padding:5px" onchange="setServicoPreco(${i},this.value)"></td>
+    <td class="right"><button class="btn danger sm" onclick="removeServico(${i})">×</button></td></tr>`).join('')
+    ||'<tr><td colspan="5" class="empty">Nenhum serviço.</td></tr>';
+}
+function setServicoPreco(i,v){db.config.servicos[i].preco=Number(v)||0;save();fillServicoSelect();toast('Preço atualizado ✓');}
+function removeServico(i){if(confirm('Remover serviço?')){db.config.servicos.splice(i,1);save();renderServicos();fillServicoSelect();}}
+function addServico(){
+  const nome=document.getElementById('cfg-serv-nome').value.trim();if(!nome){toast('Informe o serviço');return;}
+  const cat=document.getElementById('cfg-serv-cat').value.trim()||'Outros';
+  const preco=Number(document.getElementById('cfg-serv-preco').value)||0;
+  db.config.servicos.push({cat,nome,preco,tipo:'Joia'});save();
+  document.getElementById('cfg-serv-nome').value='';document.getElementById('cfg-serv-cat').value='';document.getElementById('cfg-serv-preco').value='';
+  renderServicos();fillServicoSelect();toast('Serviço adicionado ✓');
 }
 function addFuncionaria(){
   const n=document.getElementById('cfg-func-nome').value.trim();
@@ -785,7 +905,8 @@ function initAll(){
   document.getElementById('v-data').value=today();
   document.getElementById('cx-de').value=today();
   document.getElementById('cx-ate').value=today();
-  fillFuncSelects();fillEstoqueSelect();updateVendaUI();
+  fillFuncSelects();fillServicoSelect();fillEstoqueSelect();updateVendaUI();
+  if(db.config.adminPin){lockApp();}else{role='ceo';applyRole();}
 }
 initAll();
 </script>
