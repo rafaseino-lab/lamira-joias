@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lamira Joias — Sistema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rose:#b76e79; --rose-dark:#8f4f5a; --gold:#a8842f; --gold-soft:#b89a52; --blush:#faf1ee; --bg:#faf6f3;
+    --card:#ffffff; --line:#ece2dc; --ink:#2c2422; --muted:#8a7d78; --green:#2e8b57; --red:#c0392b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--blush);color:var(--gold);padding:22px 16px 20px;text-align:center;border-bottom:1px solid var(--line)}
+  .wm-main{font-family:'Cormorant Garamond',Georgia,serif;font-size:46px;font-weight:600;letter-spacing:12px;line-height:1;color:var(--gold);padding-left:12px}
+  .wm-sub{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:500;letter-spacing:9px;color:var(--gold-soft);margin-top:6px;padding-left:9px}
+  @media(max-width:520px){.wm-main{font-size:34px;letter-spacing:8px}.wm-sub{font-size:12px;letter-spacing:6px}}
+  nav{display:flex;gap:4px;background:#fff;padding:6px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;z-index:5}
+  nav button{border:none;background:transparent;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);font-weight:500}
+  nav button.active{background:var(--rose);color:#fff}
+  main{max-width:1000px;margin:0 auto;padding:22px 16px 60px}
+  .tab{display:none}
+  .tab.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+  h2{font-size:16px;margin:0 0 14px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:none;border-color:var(--rose)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .btn{background:var(--rose);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer}
+  .btn:hover{background:var(--rose-dark)}
+  .btn.gold{background:var(--gold)}
+  .btn.ghost{background:transparent;color:var(--rose);border:1px solid var(--rose)}
+  .btn.sm{padding:6px 12px;font-size:12px}
+  .btn.danger{background:transparent;color:var(--red);border:1px solid var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  tr:hover td{background:#faf6f3}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+  .kpi .v{font-size:24px;font-weight:700;margin-top:4px}
+  .kpi .l{font-size:12px;color:var(--muted)}
+  .pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .pill.card{background:#eaf2fb;color:#2a6bc0}
+  .pill.dinheiro{background:#e9f7ee;color:var(--green)}
+  .pill.zelle{background:#f0eafb;color:#7a3fc0}
+  .pill.link{background:#fbf0ea;color:#c0662a}
+  .muted{color:var(--muted);font-size:13px}
+  .row-flex{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .right{text-align:right}
+  .tag{font-size:11px;padding:2px 8px;border-radius:6px;background:#f3ece8;color:var(--rose-dark);font-weight:600}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:20}
+  .toast.show{opacity:1}
+  .empty{text-align:center;color:var(--muted);padding:26px;font-size:14px}
+  .stock-low{color:var(--red);font-weight:700}
+  #pv-stage{position:relative;width:100%;max-width:360px;aspect-ratio:3/4;background:#f3ece8;border-radius:14px;overflow:hidden;touch-action:none;flex:0 0 auto;border:1px solid var(--line)}
+  #pv-photo{width:100%;height:100%;object-fit:cover;display:none}
+  #pv-earring{position:absolute;left:50%;top:50%;width:80px;transform:translate(-50%,-50%) rotate(0deg);display:none;cursor:move;user-select:none;-webkit-user-drag:none}
+  input[type=range]{width:100%;accent-color:var(--rose)}
+  .thumb{width:34px;height:34px;object-fit:cover;border-radius:6px;vertical-align:middle;border:1px solid var(--line)}
+  @media(max-width:600px){nav button{padding:8px 10px;font-size:13px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wm-main">LAMIRA</div>
+  <div class="wm-sub">JOIAS E PIERCING</div>
+</header>
+
+<nav>
+  <button data-tab="venda" class="active">➕ Nova venda</button>
+  <button data-tab="caixa">💰 Caixa</button>
+  <button data-tab="comissoes">👩 Comissões</button>
+  <button data-tab="relatorio">📊 Relatório</button>
+  <button data-tab="estoque">💎 Estoque</button>
+  <button data-tab="provador">👂 Provador</button>
+  <button data-tab="historico">📋 Histórico</button>
+  <button data-tab="config">⚙️ Config</button>
+</nav>
+
+<main>
+  <!-- ===== NOVA VENDA ===== -->
+  <section id="venda" class="tab active">
+    <div class="card">
+      <h2>Registrar venda / serviço</h2>
+      <div class="grid">
+        <div>
+          <label>Data</label>
+          <input type="date" id="v-data">
+        </div>
+        <div>
+          <label>Tipo</label>
+          <select id="v-tipo">
+            <option value="Joia">Joia</option>
+            <option value="Piercing">Piercing (peça)</option>
+            <option value="Perfuração">Perfuração (furo)</option>
+            <option value="Tatuagem">Tatuagem</option>
+          </select>
+        </div>
+        <div>
+          <label>Item / descrição</label>
+          <input type="text" id="v-item" placeholder="Ex: Argola ouro / Furo lóbulo">
+        </div>
+        <div>
+          <label>Valor cobrado ($)</label>
+          <input type="number" id="v-valor" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div>
+          <label>Funcionária</label>
+          <select id="v-func"></select>
+        </div>
+        <div>
+          <label>Forma de pagamento</label>
+          <select id="v-pag">
+            <option value="Cartão">Cartão</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Zelle">Zelle</option>
+            <option value="Link">Link de pagamento</option>
+          </select>
+        </div>
+      </div>
+      <div id="v-estoque-wrap" style="margin-top:12px;display:none">
+        <label>Peça do estoque (baixa automática)</label>
+        <select id="v-estoque-item"><option value="">— não vincular ao estoque —</option></select>
+      </div>
+      <div id="v-comissao-preview" class="muted" style="margin-top:12px"></div>
+      <div style="margin-top:16px">
+        <button class="btn" onclick="registrarVenda()">Registrar venda</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CAIXA ===== -->
+  <section id="caixa" class="tab">
+    <div class="row-flex" style="margin-bottom:14px">
+      <div>
+        <label>De</label><input type="date" id="cx-de">
+      </div>
+      <div>
+        <label>Até</label><input type="date" id="cx-ate">
+      </div>
+      <button class="btn ghost sm" onclick="renderCaixa()">Filtrar</button>
+      <button class="btn ghost sm" onclick="limparFiltroCaixa()">Hoje</button>
+    </div>
+    <div class="kpis" id="cx-kpis"></div>
+    <div class="card">
+      <h2>Entradas por forma de pagamento</h2>
+      <table><thead><tr><th>Forma</th><th class="right">Nº vendas</th><th class="right">Total</th></tr></thead>
+      <tbody id="cx-pag"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Entradas por tipo</h2>
+      <table><thead><tr><th>Tipo</th><th class="right">Qtde</th><th class="right">Total</th></tr></thead>
+      <tbody id="cx-tipo"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== COMISSOES ===== -->
+  <section id="comissoes" class="tab">
+    <div class="row-flex" style="margin-bottom:14px">
+      <div><label>De</label><input type="date" id="cm-de"></div>
+      <div><label>Até</label><input type="date" id="cm-ate"></div>
+      <button class="btn ghost sm" onclick="renderComissoes()">Filtrar</button>
+      <button class="btn ghost sm" onclick="limparFiltroComissoes()">Tudo</button>
+    </div>
+    <div class="card">
+      <h2>Comissão por funcionária</h2>
+      <p class="muted" id="cm-regra"></p>
+      <table><thead><tr><th>Funcionária</th><th class="right">Perfurações</th><th class="right">Tatuagens</th><th class="right">Comissão a receber</th></tr></thead>
+      <tbody id="cm-body"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== RELATORIO ===== -->
+  <section id="relatorio" class="tab">
+    <div class="row-flex" style="margin-bottom:14px">
+      <div><label>Mês</label><input type="month" id="rl-mes"></div>
+      <button class="btn ghost sm" onclick="renderRelatorio()">Ver</button>
+    </div>
+    <div class="kpis" id="rl-kpis"></div>
+    <div class="card">
+      <h2>Comissão por funcionária</h2>
+      <table><thead><tr><th>Funcionária</th><th class="right">Perfurações</th><th class="right">Tatuagens</th><th class="right">Comissão</th></tr></thead>
+      <tbody id="rl-func"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Por forma de pagamento</h2>
+      <table><thead><tr><th>Forma</th><th class="right">Vendas</th><th class="right">Total</th></tr></thead>
+      <tbody id="rl-pag"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Itens mais vendidos</h2>
+      <table><thead><tr><th>Item</th><th class="right">Qtde</th><th class="right">Total</th></tr></thead>
+      <tbody id="rl-top"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== ESTOQUE ===== -->
+  <section id="estoque" class="tab">
+    <div class="card">
+      <h2>Adicionar / repor peça</h2>
+      <div class="grid">
+        <div><label>Nome da peça</label><input type="text" id="e-nome" placeholder="Ex: Argola ouro 18k"></div>
+        <div><label>Categoria</label>
+          <select id="e-cat"><option>Joia</option><option>Piercing</option></select></div>
+        <div><label>Quantidade</label><input type="number" id="e-qtd" min="0" step="1" placeholder="0"></div>
+        <div><label>Preço venda ($)</label><input type="number" id="e-preco" step="0.01" min="0" placeholder="0.00"></div>
+        <div><label>Alerta estoque baixo (≤)</label><input type="number" id="e-min" min="0" step="1" value="3"></div>
+        <div><label>Foto da peça (p/ provador)</label><input type="file" id="e-img" accept="image/*"></div>
+      </div>
+      <div id="e-prev-wrap" style="display:none;margin-top:14px">
+        <label>Recorte da joia</label>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+          <div style="background:repeating-conic-gradient(#e7e7e7 0 25%, #fff 0 50%) 50%/16px 16px;border:1px solid var(--line);border-radius:10px;padding:6px">
+            <canvas id="e-prev" style="max-width:150px;max-height:150px;display:block"></canvas>
+          </div>
+          <div style="flex:1;min-width:190px">
+            <label>Sensibilidade do recorte</label>
+            <input type="range" id="e-tol" min="10" max="130" value="55">
+            <div class="row-flex" style="margin-top:10px">
+              <button class="btn ghost sm" onclick="removerFundo()">✂ Remover fundo</button>
+              <button class="btn ghost sm" onclick="usarOriginal()">↺ Original</button>
+            </div>
+            <p class="muted" style="margin-top:8px">Melhor resultado: joia em <b>fundo branco/liso, sem segurar com a mão</b>. Ajuste a sensibilidade e clique em Remover fundo.</p>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px"><button class="btn" onclick="salvarPeca()">Salvar peça</button></div>
+    </div>
+    <div class="card">
+      <h2>Estoque atual</h2>
+      <table><thead><tr><th>Peça</th><th>Categoria</th><th class="right">Preço</th><th class="right">Qtde</th><th class="right">Ações</th></tr></thead>
+      <tbody id="e-body"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== PROVADOR ===== -->
+  <section id="provador" class="tab">
+    <div class="card">
+      <h2>Provador — como o brinco vai ficar</h2>
+      <p class="muted">Tire ou envie a foto da orelha, escolha o brinco e arraste pra posicionar. Depois é só baixar a imagem pra mostrar/enviar pra cliente.</p>
+      <div class="grid" style="margin-bottom:14px">
+        <div>
+          <label>1. Foto da orelha</label>
+          <input type="file" id="pv-photo-in" accept="image/*" capture="environment">
+        </div>
+        <div>
+          <label>2. Brinco do estoque</label>
+          <select id="pv-earring-sel"><option value="">— escolher —</option></select>
+        </div>
+        <div>
+          <label>...ou enviar imagem do brinco</label>
+          <input type="file" id="pv-earring-in" accept="image/*">
+        </div>
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+        <div id="pv-stage">
+          <img id="pv-photo" alt="">
+          <div id="pv-placeholder" class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">Envie a foto da orelha 👂</div>
+          <img id="pv-earring" alt="" draggable="false">
+        </div>
+        <div style="flex:1;min-width:200px">
+          <label>Tamanho</label>
+          <input type="range" id="pv-size" min="20" max="240" value="80">
+          <label style="margin-top:12px">Girar</label>
+          <input type="range" id="pv-rot" min="-180" max="180" value="0">
+          <div style="margin-top:14px" class="row-flex">
+            <button class="btn ghost sm" onclick="pvFlip()">↔ Espelhar</button>
+            <button class="btn ghost sm" onclick="pvReset()">Limpar</button>
+          </div>
+          <div style="margin-top:16px" class="row-flex">
+            <button class="btn gold" onclick="pvDownload()">⬇ Baixar imagem</button>
+            <button class="btn" id="pv-ia-btn" onclick="pvGerarIA()">✨ Versão realista (IA)</button>
+          </div>
+          <p class="muted" style="margin-top:10px">Dica: arraste o brinco com o dedo/mouse direto na foto. A IA precisa do servidor configurado em ⚙️ Config.</p>
+        </div>
+      </div>
+      <div id="pv-ia-result" style="margin-top:16px"></div>
+    </div>
+  </section>
+
+  <!-- ===== HISTORICO ===== -->
+  <section id="historico" class="tab">
+    <div class="card">
+      <div class="row-flex" style="justify-content:space-between">
+        <h2 style="margin:0">Histórico de vendas</h2>
+        <div class="row-flex">
+          <button class="btn ghost sm" onclick="exportarCSV()">⬇ CSV completo</button>
+          <button class="btn gold sm" onclick="exportarQuickBooks()">⬇ QuickBooks</button>
+        </div>
+      </div>
+      <table style="margin-top:12px"><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Funcionária</th><th>Pgto</th><th class="right">Valor</th><th></th></tr></thead>
+      <tbody id="h-body"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== CONFIG ===== -->
+  <section id="config" class="tab">
+    <div class="card">
+      <h2>Funcionárias</h2>
+      <div class="row-flex">
+        <div style="flex:1"><label>Nome</label><input type="text" id="cfg-func-nome" placeholder="Nome da funcionária"></div>
+        <button class="btn sm" onclick="addFuncionaria()">Adicionar</button>
+      </div>
+      <table style="margin-top:12px"><tbody id="cfg-func-body"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Comissão</h2>
+      <div class="grid">
+        <div><label>Valor por perfuração ($)</label><input type="number" id="cfg-com-perf" step="0.01" min="0"></div>
+        <div><label>Comissão por tatuagem</label>
+          <select id="cfg-com-tat-tipo"><option value="fixo">Valor fixo ($)</option><option value="pct">% do valor</option><option value="nenhum">Sem comissão</option></select></div>
+        <div><label>Valor tatuagem</label><input type="number" id="cfg-com-tat-val" step="0.01" min="0"></div>
+      </div>
+      <div style="margin-top:14px"><button class="btn" onclick="salvarConfigComissao()">Salvar regras</button></div>
+    </div>
+    <div class="card">
+      <h2>Provador com IA (opcional)</h2>
+      <label>URL do servidor de IA</label>
+      <input type="text" id="cfg-ai-url" placeholder="https://seu-app.onrender.com">
+      <p class="muted" style="margin-top:8px">Deixe em branco se o app estiver hospedado no mesmo servidor. Preencha só se o servidor de IA estiver em outro endereço. Veja o GUIA-IA.</p>
+      <div style="margin-top:12px"><button class="btn sm" onclick="salvarAiUrl()">Salvar servidor</button></div>
+    </div>
+    <div class="card">
+      <h2>Dados</h2>
+      <p class="muted">Tudo fica salvo neste navegador. Faça backup exportando de vez em quando.</p>
+      <div class="row-flex">
+        <button class="btn ghost sm" onclick="backup()">⬇ Backup (JSON)</button>
+        <button class="btn danger sm" onclick="resetar()">Apagar tudo</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='lamira_joias_v1';
+const money=n=>'$'+(Number(n)||0).toFixed(2);
+const today=()=>new Date().toISOString().slice(0,10);
+
+let db=load();
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return d;}catch(e){}
+  return {
+    vendas:[],
+    funcionarias:['Balcão'],
+    estoque:[],
+    config:{comPerf:5, tatTipo:'nenhum', tatVal:0, aiUrl:''}
+  };
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+/* ---------- NAV ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById(b.dataset.tab).classList.add('active');
+  if(b.dataset.tab==='caixa')renderCaixa();
+  if(b.dataset.tab==='comissoes')renderComissoes();
+  if(b.dataset.tab==='relatorio')renderRelatorio();
+  if(b.dataset.tab==='estoque')renderEstoque();
+  if(b.dataset.tab==='provador')initProvador();
+  if(b.dataset.tab==='historico')renderHistorico();
+  if(b.dataset.tab==='config')renderConfig();
+});
+
+/* ---------- COMISSAO CALC ---------- */
+function comissaoDaVenda(v){
+  if(v.tipo==='Perfuração')return Number(db.config.comPerf)||0;
+  if(v.tipo==='Tatuagem'){
+    if(db.config.tatTipo==='fixo')return Number(db.config.tatVal)||0;
+    if(db.config.tatTipo==='pct')return (Number(v.valor)||0)*(Number(db.config.tatVal)||0)/100;
+  }
+  return 0;
+}
+
+/* ---------- NOVA VENDA ---------- */
+function fillFuncSelects(){
+  const opts=db.funcionarias.map(f=>`<option>${f}</option>`).join('');
+  document.getElementById('v-func').innerHTML=opts;
+}
+function fillEstoqueSelect(){
+  const sel=document.getElementById('v-estoque-item');
+  sel.innerHTML='<option value="">— não vincular ao estoque —</option>'+
+    db.estoque.map((p,i)=>`<option value="${i}">${p.nome} (${p.qtd} un · ${money(p.preco)})</option>`).join('');
+}
+document.getElementById('v-tipo').onchange=updateVendaUI;
+document.getElementById('v-valor').oninput=updateVendaUI;
+document.getElementById('v-estoque-item').onchange=function(){
+  const p=db.estoque[this.value];
+  if(p)document.getElementById('v-valor').value=p.preco;
+  updateVendaUI();
+};
+function updateVendaUI(){
+  const tipo=document.getElementById('v-tipo').value;
+  const wrap=document.getElementById('v-estoque-wrap');
+  wrap.style.display=(tipo==='Joia'||tipo==='Piercing')?'block':'none';
+  const c=comissaoDaVenda({tipo,valor:document.getElementById('v-valor').value});
+  const prev=document.getElementById('v-comissao-preview');
+  if(c>0)prev.innerHTML=`💡 Comissão da funcionária nesta venda: <b>${money(c)}</b>`;
+  else prev.textContent='';
+}
+function registrarVenda(){
+  const v={
+    data:document.getElementById('v-data').value||today(),
+    tipo:document.getElementById('v-tipo').value,
+    item:document.getElementById('v-item').value.trim(),
+    valor:Number(document.getElementById('v-valor').value)||0,
+    func:document.getElementById('v-func').value,
+    pag:document.getElementById('v-pag').value,
+    estoqueIdx:document.getElementById('v-estoque-item').value
+  };
+  if(!v.valor&&v.tipo!=='Perfuração'){toast('Informe o valor');return;}
+  v.comissao=comissaoDaVenda(v);
+  // baixa estoque
+  if((v.tipo==='Joia'||v.tipo==='Piercing')&&v.estoqueIdx!==''){
+    const p=db.estoque[v.estoqueIdx];
+    if(p){if(p.qtd<=0){toast('Peça sem estoque!');return;}p.qtd--;if(!v.item)v.item=p.nome;}
+  }
+  delete v.estoqueIdx;
+  v.id=Date.now();
+  db.vendas.push(v);save();
+  toast('Venda registrada ✓');
+  document.getElementById('v-item').value='';
+  document.getElementById('v-valor').value='';
+  document.getElementById('v-estoque-item').value='';
+  fillEstoqueSelect();updateVendaUI();
+}
+
+/* ---------- CAIXA ---------- */
+function inRange(d,de,ate){return (!de||d>=de)&&(!ate||d<=ate);}
+function limparFiltroCaixa(){document.getElementById('cx-de').value=today();document.getElementById('cx-ate').value=today();renderCaixa();}
+function renderCaixa(){
+  const de=document.getElementById('cx-de').value,ate=document.getElementById('cx-ate').value;
+  const vs=db.vendas.filter(v=>inRange(v.data,de,ate));
+  const total=vs.reduce((s,v)=>s+v.valor,0);
+  const comis=vs.reduce((s,v)=>s+(v.comissao||0),0);
+  document.getElementById('cx-kpis').innerHTML=`
+    <div class="kpi"><div class="l">Faturamento</div><div class="v">${money(total)}</div></div>
+    <div class="kpi"><div class="l">Nº de vendas</div><div class="v">${vs.length}</div></div>
+    <div class="kpi"><div class="l">Comissões</div><div class="v">${money(comis)}</div></div>
+    <div class="kpi"><div class="l">Líquido (fat − com.)</div><div class="v">${money(total-comis)}</div></div>`;
+  const pags=['Cartão','Dinheiro','Zelle','Link'];
+  document.getElementById('cx-pag').innerHTML=pags.map(p=>{
+    const f=vs.filter(v=>v.pag===p);const t=f.reduce((s,v)=>s+v.valor,0);
+    const cls=p==='Cartão'?'card':p==='Dinheiro'?'dinheiro':p==='Zelle'?'zelle':'link';
+    return `<tr><td><span class="pill ${cls}">${p}</span></td><td class="right">${f.length}</td><td class="right">${money(t)}</td></tr>`;
+  }).join('');
+  const tipos=['Joia','Piercing','Perfuração','Tatuagem'];
+  document.getElementById('cx-tipo').innerHTML=tipos.map(tp=>{
+    const f=vs.filter(v=>v.tipo===tp);const t=f.reduce((s,v)=>s+v.valor,0);
+    return `<tr><td>${tp}</td><td class="right">${f.length}</td><td class="right">${money(t)}</td></tr>`;
+  }).join('');
+}
+
+/* ---------- COMISSOES ---------- */
+function limparFiltroComissoes(){document.getElementById('cm-de').value='';document.getElementById('cm-ate').value='';renderComissoes();}
+function renderComissoes(){
+  const de=document.getElementById('cm-de').value,ate=document.getElementById('cm-ate').value;
+  const vs=db.vendas.filter(v=>inRange(v.data,de,ate));
+  const tat=db.config.tatTipo==='nenhum'?'sem comissão':(db.config.tatTipo==='fixo'?money(db.config.tatVal)+' fixo':db.config.tatVal+'% do valor');
+  document.getElementById('cm-regra').innerHTML=`Regra: ${money(db.config.comPerf)} por perfuração · Tatuagem: ${tat}`;
+  const map={};
+  db.funcionarias.forEach(f=>map[f]={perf:0,tat:0,com:0});
+  vs.forEach(v=>{if(!map[v.func])map[v.func]={perf:0,tat:0,com:0};
+    if(v.tipo==='Perfuração')map[v.func].perf++;
+    if(v.tipo==='Tatuagem')map[v.func].tat++;
+    map[v.func].com+=(v.comissao||0);});
+  const rows=Object.entries(map).filter(([f,d])=>d.com>0||d.perf>0||d.tat>0);
+  document.getElementById('cm-body').innerHTML=rows.length?rows.map(([f,d])=>
+    `<tr><td>${f}</td><td class="right">${d.perf}</td><td class="right">${d.tat}</td><td class="right"><b>${money(d.com)}</b></td></tr>`
+  ).join(''):'<tr><td colspan="4" class="empty">Nenhuma comissão no período.</td></tr>';
+}
+
+/* ---------- RELATORIO ---------- */
+function renderRelatorio(){
+  const mesEl=document.getElementById('rl-mes');
+  if(!mesEl.value)mesEl.value=today().slice(0,7);
+  const mes=mesEl.value;
+  const vs=db.vendas.filter(v=>v.data.slice(0,7)===mes);
+  const total=vs.reduce((s,v)=>s+v.valor,0);
+  const comis=vs.reduce((s,v)=>s+(v.comissao||0),0);
+  document.getElementById('rl-kpis').innerHTML=`
+    <div class="kpi"><div class="l">Faturamento do mês</div><div class="v">${money(total)}</div></div>
+    <div class="kpi"><div class="l">Vendas</div><div class="v">${vs.length}</div></div>
+    <div class="kpi"><div class="l">Comissões</div><div class="v">${money(comis)}</div></div>
+    <div class="kpi"><div class="l">Líquido</div><div class="v">${money(total-comis)}</div></div>`;
+  const fmap={};db.funcionarias.forEach(f=>fmap[f]={perf:0,tat:0,com:0});
+  vs.forEach(v=>{if(!fmap[v.func])fmap[v.func]={perf:0,tat:0,com:0};
+    if(v.tipo==='Perfuração')fmap[v.func].perf++;if(v.tipo==='Tatuagem')fmap[v.func].tat++;fmap[v.func].com+=(v.comissao||0);});
+  const frows=Object.entries(fmap).filter(([f,d])=>d.perf||d.tat||d.com);
+  document.getElementById('rl-func').innerHTML=frows.length?frows.map(([f,d])=>
+    `<tr><td>${f}</td><td class="right">${d.perf}</td><td class="right">${d.tat}</td><td class="right"><b>${money(d.com)}</b></td></tr>`).join('')
+    :'<tr><td colspan="4" class="empty">Sem dados no mês.</td></tr>';
+  const pags=['Cartão','Dinheiro','Zelle','Link'];
+  document.getElementById('rl-pag').innerHTML=pags.map(p=>{const f=vs.filter(v=>v.pag===p);
+    const cls=p==='Cartão'?'card':p==='Dinheiro'?'dinheiro':p==='Zelle'?'zelle':'link';
+    return `<tr><td><span class="pill ${cls}">${p}</span></td><td class="right">${f.length}</td><td class="right">${money(f.reduce((s,v)=>s+v.valor,0))}</td></tr>`;}).join('');
+  const tmap={};vs.forEach(v=>{const k=(v.item||v.tipo);if(!tmap[k])tmap[k]={q:0,t:0};tmap[k].q++;tmap[k].t+=v.valor;});
+  const top=Object.entries(tmap).sort((a,z)=>z[1].t-a[1].t).slice(0,5);
+  document.getElementById('rl-top').innerHTML=top.length?top.map(([k,d])=>
+    `<tr><td>${k}</td><td class="right">${d.q}</td><td class="right">${money(d.t)}</td></tr>`).join('')
+    :'<tr><td colspan="3" class="empty">Sem vendas no mês.</td></tr>';
+}
+
+/* ---------- ESTOQUE ---------- */
+let estoqueImgOrig=null, estoqueImg=null;
+document.getElementById('e-img').onchange=function(){
+  const f=this.files[0];
+  if(!f){estoqueImgOrig=estoqueImg=null;document.getElementById('e-prev-wrap').style.display='none';return;}
+  const r=new FileReader();
+  r.onload=e=>{const im=new Image();im.onload=()=>{
+    const max=460,sc=Math.min(1,max/Math.max(im.width,im.height));
+    const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    estoqueImgOrig=estoqueImg=c.toDataURL('image/png');
+    document.getElementById('e-prev-wrap').style.display='block';
+    desenhaPreview(estoqueImg);};im.src=e.target.result;};
+  r.readAsDataURL(f);
+};
+function desenhaPreview(data){
+  const im=new Image();im.onload=()=>{const c=document.getElementById('e-prev');
+    c.width=im.width;c.height=im.height;c.getContext('2d').clearRect(0,0,c.width,c.height);
+    c.getContext('2d').drawImage(im,0,0);};im.src=data;
+}
+function usarOriginal(){estoqueImg=estoqueImgOrig;desenhaPreview(estoqueImg);}
+function removerFundo(){
+  const tol=Number(document.getElementById('e-tol').value)||55;
+  const im=new Image();im.onload=()=>{
+    const w=im.width,h=im.height;
+    const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
+    ctx.drawImage(im,0,0);const id=ctx.getImageData(0,0,w,h),d=id.data;
+    // cor de fundo = média dos 4 cantos
+    const cor=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]];let br=0,bg=0,bb=0;
+    cor.forEach(([x,y])=>{const i=(y*w+x)*4;br+=d[i];bg+=d[i+1];bb+=d[i+2];});br/=4;bg/=4;bb/=4;
+    const vis=new Uint8Array(w*h),st=[],tol2=tol*tol;
+    for(let x=0;x<w;x++){st.push(x);st.push((h-1)*w+x);}
+    for(let y=0;y<h;y++){st.push(y*w);st.push(y*w+w-1);}
+    while(st.length){const p=st.pop();if(vis[p])continue;vis[p]=1;const i=p*4;
+      const dr=d[i]-br,dg=d[i+1]-bg,db=d[i+2]-bb;
+      if(dr*dr+dg*dg+db*db>tol2)continue;
+      d[i+3]=0;const x=p%w,y=(p/w)|0;
+      if(x>0)st.push(p-1);if(x<w-1)st.push(p+1);if(y>0)st.push(p-w);if(y<h-1)st.push(p+w);}
+    ctx.putImageData(id,0,0);
+    // recorta as bordas transparentes
+    let minx=w,miny=h,maxx=0,maxy=0,found=false;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(d[(y*w+x)*4+3]>10){found=true;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;}}
+    let out;
+    if(found){const cw=maxx-minx+1,ch=maxy-miny+1;const c2=document.createElement('canvas');c2.width=cw;c2.height=ch;
+      c2.getContext('2d').drawImage(c,minx,miny,cw,ch,0,0,cw,ch);out=c2.toDataURL('image/png');}
+    else out=c.toDataURL('image/png');
+    estoqueImg=out;desenhaPreview(out);toast('Fundo removido ✓');
+  };im.src=estoqueImgOrig;
+}
+function salvarPeca(){
+  const nome=document.getElementById('e-nome').value.trim();
+  if(!nome){toast('Informe o nome');return;}
+  const p={nome,cat:document.getElementById('e-cat').value,
+    qtd:parseInt(document.getElementById('e-qtd').value)||0,
+    preco:Number(document.getElementById('e-preco').value)||0,
+    min:parseInt(document.getElementById('e-min').value)||0};
+  const imgData=estoqueImg;
+  const ex=db.estoque.find(x=>x.nome.toLowerCase()===nome.toLowerCase());
+  if(ex){ex.qtd+=p.qtd;ex.preco=p.preco||ex.preco;ex.min=p.min;if(imgData)ex.img=imgData;toast('Estoque reposto ✓');}
+  else{if(imgData)p.img=imgData;db.estoque.push(p);toast('Peça adicionada ✓');}
+  save();
+  document.getElementById('e-nome').value='';document.getElementById('e-qtd').value='';
+  document.getElementById('e-preco').value='';document.getElementById('e-img').value='';
+  estoqueImg=estoqueImgOrig=null;document.getElementById('e-prev-wrap').style.display='none';
+  renderEstoque();fillEstoqueSelect();
+}
+function renderEstoque(){
+  const b=document.getElementById('e-body');
+  if(!db.estoque.length){b.innerHTML='<tr><td colspan="5" class="empty">Nenhuma peça cadastrada.</td></tr>';return;}
+  b.innerHTML=db.estoque.map((p,i)=>{
+    const low=p.qtd<=p.min?'stock-low':'';
+    const th=p.img?`<img src="${p.img}" class="thumb"> `:'';
+    return `<tr><td>${th}${p.nome}${p.qtd<=p.min?' ⚠️':''}</td><td>${p.cat}</td><td class="right">${money(p.preco)}</td>
+      <td class="right ${low}">${p.qtd}</td>
+      <td class="right">
+        <button class="btn ghost sm" onclick="ajustaEstoque(${i},1)">+</button>
+        <button class="btn ghost sm" onclick="ajustaEstoque(${i},-1)">−</button>
+        <button class="btn danger sm" onclick="removePeca(${i})">×</button>
+      </td></tr>`;
+  }).join('');
+}
+function ajustaEstoque(i,d){db.estoque[i].qtd=Math.max(0,db.estoque[i].qtd+d);save();renderEstoque();fillEstoqueSelect();}
+function removePeca(i){if(confirm('Remover esta peça?')){db.estoque.splice(i,1);save();renderEstoque();fillEstoqueSelect();}}
+
+/* ---------- HISTORICO ---------- */
+function renderHistorico(){
+  const b=document.getElementById('h-body');
+  const vs=[...db.vendas].sort((a,z)=>z.id-a.id);
+  if(!vs.length){b.innerHTML='<tr><td colspan="7" class="empty">Nenhuma venda registrada.</td></tr>';return;}
+  b.innerHTML=vs.map(v=>{
+    const cls=v.pag==='Cartão'?'card':v.pag==='Dinheiro'?'dinheiro':v.pag==='Zelle'?'zelle':'link';
+    return `<tr><td>${v.data.split('-').reverse().join('/')}</td><td><span class="tag">${v.tipo}</span></td>
+      <td>${v.item||'—'}</td><td>${v.func}</td><td><span class="pill ${cls}">${v.pag}</span></td>
+      <td class="right">${money(v.valor)}</td>
+      <td class="right"><button class="btn danger sm" onclick="excluirVenda(${v.id})">×</button></td></tr>`;
+  }).join('');
+}
+function excluirVenda(id){
+  if(!confirm('Excluir esta venda?'))return;
+  db.vendas=db.vendas.filter(v=>v.id!==id);save();renderHistorico();
+}
+function exportarCSV(){
+  const head=['Data','Tipo','Item','Funcionaria','Pagamento','Valor','Comissao'];
+  const rows=db.vendas.map(v=>[v.data,v.tipo,'"'+(v.item||'')+'"',v.func,v.pag,v.valor,v.comissao||0]);
+  const csv=[head.join(','),...rows.map(r=>r.join(','))].join('\n');
+  baixar(csv,'lamira-vendas.csv','text/csv');
+}
+
+function exportarQuickBooks(){
+  // Formato de 3 colunas aceito na importação de transações do QuickBooks Online:
+  // Date, Description, Amount
+  const head=['Date','Description','Amount'];
+  const vs=[...db.vendas].sort((a,z)=>a.data.localeCompare(z.data));
+  const rows=vs.map(v=>{
+    const [y,m,d]=v.data.split('-');
+    const desc=`${v.tipo}${v.item?' - '+v.item:''} (${v.pag}) - ${v.func}`.replace(/"/g,"'");
+    return [`${m}/${d}/${y}`,`"${desc}"`,v.valor.toFixed(2)];
+  });
+  const csv=[head.join(','),...rows.map(r=>r.join(','))].join('\n');
+  baixar(csv,'lamira-quickbooks.csv','text/csv');
+  toast('Arquivo QuickBooks gerado ✓');
+}
+
+/* ---------- PROVADOR ---------- */
+let pvState={x:null,y:null,size:80,rot:0,flip:false,drag:false,dx:0,dy:0};
+const svg=s=>'data:image/svg+xml;utf8,'+encodeURIComponent(s);
+const PV_SAMPLES=[
+  ['Borboleta (branca/dourada)', svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 90"><circle cx="30" cy="8" r="5" fill="none" stroke="#c9a24b" stroke-width="3"/><line x1="30" y1="13" x2="30" y2="42" stroke="#c9a24b" stroke-width="3"/><g stroke="#c9a24b" stroke-width="2.5"><path d="M30 60 C10 40 6 60 18 66 C26 70 30 66 30 60Z" fill="#f7f1ea"/><path d="M30 60 C50 40 54 60 42 66 C34 70 30 66 30 60Z" fill="#f3ebe0"/><path d="M30 62 C18 62 16 78 26 80 C30 81 30 74 30 62Z" fill="#faf6f0"/><path d="M30 62 C42 62 44 78 34 80 C30 81 30 74 30 62Z" fill="#f0e6d8"/></g></svg>')],
+  ['Argola dourada', svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 66"><circle cx="22" cy="44" r="18" fill="none" stroke="#c9a24b" stroke-width="5"/><circle cx="22" cy="24" r="3" fill="#c9a24b"/></svg>')],
+  ['Ponto de luz', svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="11" fill="#e9dcc4"/><circle cx="20" cy="20" r="11" fill="none" stroke="#c9a24b" stroke-width="3.5"/><circle cx="16" cy="16" r="3" fill="#fff" opacity="0.8"/></svg>')],
+  ['Pendente roxo', svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 78"><circle cx="17" cy="8" r="4.5" fill="none" stroke="#c9a24b" stroke-width="3"/><line x1="17" y1="12" x2="17" y2="42" stroke="#c9a24b" stroke-width="3"/><path d="M17 44 l13 16 -13 16 -13 -16z" fill="#7a3fc0"/><path d="M17 44 l13 16 -13 16 -13 -16z" fill="none" stroke="#c9a24b" stroke-width="2.5"/></svg>')],
+  ['Coração', svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 60"><circle cx="22" cy="8" r="4" fill="none" stroke="#c9a24b" stroke-width="3"/><path d="M22 54 C4 38 8 20 22 30 C36 20 40 38 22 54Z" fill="#d4537e" stroke="#c9a24b" stroke-width="2.5"/></svg>')]
+];
+function initProvador(){
+  const sel=document.getElementById('pv-earring-sel');
+  const withImg=db.estoque.filter(p=>p.img);
+  let html='<option value="">— escolher —</option>';
+  html+='<optgroup label="Exemplos p/ testar">'+PV_SAMPLES.map((s,i)=>`<option value="s:${i}">${s[0]}</option>`).join('')+'</optgroup>';
+  if(withImg.length)html+='<optgroup label="Meu estoque">'+withImg.map(p=>`<option value="${db.estoque.indexOf(p)}">${p.nome}</option>`).join('')+'</optgroup>';
+  sel.innerHTML=html;
+}
+document.getElementById('pv-photo-in').onchange=function(){
+  const f=this.files[0];if(!f)return;const r=new FileReader();
+  r.onload=e=>{const img=document.getElementById('pv-photo');img.src=e.target.result;img.style.display='block';
+    document.getElementById('pv-placeholder').style.display='none';};
+  r.readAsDataURL(f);
+};
+document.getElementById('pv-earring-sel').onchange=function(){
+  const v=this.value;if(!v)return;
+  if(v.startsWith('s:')){pvSetEarring(PV_SAMPLES[+v.slice(2)][1]);return;}
+  const p=db.estoque[v];if(p&&p.img)pvSetEarring(p.img);
+};
+document.getElementById('pv-earring-in').onchange=function(){
+  const f=this.files[0];if(!f)return;const r=new FileReader();
+  r.onload=e=>pvSetEarring(e.target.result);r.readAsDataURL(f);
+};
+function pvSetEarring(src){
+  const e=document.getElementById('pv-earring');e.src=src;e.style.display='block';
+  const st=document.getElementById('pv-stage');
+  pvState.x=st.clientWidth/2;pvState.y=st.clientHeight/2;
+  pvState.size=Number(document.getElementById('pv-size').value)||80;
+  pvState.rot=Number(document.getElementById('pv-rot').value)||0;
+  pvRender();
+}
+function pvRender(){
+  const e=document.getElementById('pv-earring');
+  if(pvState.x==null)return;
+  e.style.left=pvState.x+'px';e.style.top=pvState.y+'px';e.style.width=pvState.size+'px';
+  e.style.transform=`translate(-50%,-50%) rotate(${pvState.rot}deg) scaleX(${pvState.flip?-1:1})`;
+}
+document.getElementById('pv-size').oninput=function(){pvState.size=Number(this.value);pvRender();};
+document.getElementById('pv-rot').oninput=function(){pvState.rot=Number(this.value);pvRender();};
+function pvFlip(){pvState.flip=!pvState.flip;pvRender();}
+function pvReset(){
+  const e=document.getElementById('pv-earring');e.style.display='none';e.src='';
+  const img=document.getElementById('pv-photo');img.style.display='none';img.src='';
+  document.getElementById('pv-placeholder').style.display='flex';
+  document.getElementById('pv-photo-in').value='';document.getElementById('pv-earring-in').value='';
+  document.getElementById('pv-earring-sel').value='';
+  pvState={x:null,y:null,size:80,rot:0,flip:false,drag:false,dx:0,dy:0};
+}
+(function pvDragSetup(){
+  const e=document.getElementById('pv-earring'),st=document.getElementById('pv-stage');
+  const pt=ev=>{const r=st.getBoundingClientRect();const t=ev.touches?ev.touches[0]:ev;return{x:t.clientX-r.left,y:t.clientY-r.top};};
+  const down=ev=>{if(e.style.display==='none')return;pvState.drag=true;const p=pt(ev);pvState.dx=p.x-pvState.x;pvState.dy=p.y-pvState.y;ev.preventDefault();};
+  const move=ev=>{if(!pvState.drag)return;const p=pt(ev);pvState.x=p.x-pvState.dx;pvState.y=p.y-pvState.dy;pvRender();ev.preventDefault();};
+  const up=()=>pvState.drag=false;
+  e.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+  e.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+})();
+function pvDownload(){
+  const photo=document.getElementById('pv-photo'),ear=document.getElementById('pv-earring'),st=document.getElementById('pv-stage');
+  if(photo.style.display==='none'){toast('Envie a foto primeiro');return;}
+  const W=st.clientWidth,H=st.clientHeight;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');
+  // desenha a foto simulando object-fit: cover
+  const iw=photo.naturalWidth,ih=photo.naturalHeight,sc=Math.max(W/iw,H/ih);
+  const dw=iw*sc,dh=ih*sc;ctx.drawImage(photo,(W-dw)/2,(H-dh)/2,dw,dh);
+  // desenha o brinco
+  if(ear.style.display!=='none'&&ear.src){
+    const ar=ear.naturalHeight/ear.naturalWidth||1;const w=pvState.size,h=w*ar;
+    ctx.save();ctx.translate(pvState.x,pvState.y);ctx.rotate(pvState.rot*Math.PI/180);
+    ctx.scale(pvState.flip?-1:1,1);ctx.drawImage(ear,-w/2,-h/2,w,h);ctx.restore();
+  }
+  c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='provador-lamira.png';a.click();},'image/png');
+  toast('Imagem salva ✓');
+}
+function pvToPng(src){return new Promise((res,rej)=>{const im=new Image();im.crossOrigin='anonymous';
+  im.onload=()=>{const w=im.naturalWidth||512,h=im.naturalHeight||512;const c=document.createElement('canvas');
+    c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);try{res(c.toDataURL('image/png'));}catch(e){rej(e);}};
+  im.onerror=()=>rej(new Error('imagem'));im.src=src;});}
+async function pvGerarIA(){
+  const photo=document.getElementById('pv-photo'),ear=document.getElementById('pv-earring');
+  if(photo.style.display==='none'){toast('Envie a foto da orelha');return;}
+  if(ear.style.display==='none'||!ear.src){toast('Escolha a joia');return;}
+  const base=(db.config.aiUrl||'').replace(/\/+$/,'');
+  const url=base+'/api/provador';
+  const btn=document.getElementById('pv-ia-btn');const old=btn.textContent;
+  btn.disabled=true;btn.textContent='Gerando… (~15s)';
+  const out=document.getElementById('pv-ia-result');
+  out.innerHTML='<p class="muted">A IA está encaixando a joia na orelha…</p>';
+  try{
+    const earPng=await pvToPng(photo.src);
+    const jewPng=await pvToPng(ear.src);
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ear:earPng,jewelry:jewPng})});
+    const data=await r.json();
+    if(!r.ok||!data.image)throw new Error(data.error||'falha na geração');
+    out.innerHTML='<h2 style="margin:0 0 10px">Resultado realista (IA)</h2>'+
+      '<img src="'+data.image+'" style="max-width:360px;width:100%;border-radius:12px;border:1px solid var(--line)">'+
+      '<div style="margin-top:10px"><a class="btn gold sm" href="'+data.image+'" download="provador-ia-lamira.png">⬇ Baixar</a></div>';
+    toast('Imagem realista gerada ✓');
+  }catch(e){
+    out.innerHTML='<p style="color:var(--red)">Não deu pra gerar: '+e.message+'</p><p class="muted">Confira se o servidor de IA está publicado e a URL está em ⚙️ Config. Veja o GUIA-IA.</p>';
+  }finally{btn.disabled=false;btn.textContent=old;}
+}
+function salvarAiUrl(){db.config.aiUrl=document.getElementById('cfg-ai-url').value.trim();save();toast('Servidor salvo ✓');}
+
+/* ---------- CONFIG ---------- */
+function renderConfig(){
+  document.getElementById('cfg-func-body').innerHTML=db.funcionarias.map((f,i)=>
+    `<tr><td>${f}</td><td class="right"><button class="btn danger sm" onclick="removeFunc(${i})">remover</button></td></tr>`).join('');
+  document.getElementById('cfg-com-perf').value=db.config.comPerf;
+  document.getElementById('cfg-com-tat-tipo').value=db.config.tatTipo;
+  document.getElementById('cfg-com-tat-val').value=db.config.tatVal;
+  document.getElementById('cfg-ai-url').value=db.config.aiUrl||'';
+}
+function addFuncionaria(){
+  const n=document.getElementById('cfg-func-nome').value.trim();
+  if(!n)return;
+  if(db.funcionarias.includes(n)){toast('Já existe');return;}
+  db.funcionarias.push(n);save();document.getElementById('cfg-func-nome').value='';
+  renderConfig();fillFuncSelects();
+}
+function removeFunc(i){
+  if(db.funcionarias.length<=1){toast('Deixe ao menos uma');return;}
+  db.funcionarias.splice(i,1);save();renderConfig();fillFuncSelects();
+}
+function salvarConfigComissao(){
+  db.config.comPerf=Number(document.getElementById('cfg-com-perf').value)||0;
+  db.config.tatTipo=document.getElementById('cfg-com-tat-tipo').value;
+  db.config.tatVal=Number(document.getElementById('cfg-com-tat-val').value)||0;
+  save();toast('Regras salvas ✓');updateVendaUI();
+}
+function backup(){baixar(JSON.stringify(db,null,2),'lamira-backup.json','application/json');}
+function resetar(){if(confirm('Apagar TODOS os dados? Isso não pode ser desfeito.')){localStorage.removeItem(KEY);db=load();initAll();toast('Dados apagados');}}
+function baixar(txt,nome,tipo){
+  const blob=new Blob([txt],{type:tipo});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=nome;a.click();
+}
+
+/* ---------- INIT ---------- */
+function initAll(){
+  document.getElementById('v-data').value=today();
+  document.getElementById('cx-de').value=today();
+  document.getElementById('cx-ate').value=today();
+  fillFuncSelects();fillEstoqueSelect();updateVendaUI();
+}
+initAll();
+</script>
+</body>
+</html>

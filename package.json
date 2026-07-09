@@ -1,0 +1,17 @@
+{
+  "name": "lamira-joias",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "App Lamira Joias + provador com IA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "docx": "^9.7.1",
+    "express": "^4.19.2"
+  }
+}
