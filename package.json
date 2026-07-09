@@ -2,7 +2,7 @@
   "name": "lamira-joias",
   "version": "1.0.0",
   "type": "module",
-  "description": "App Lamira Joias + provador com IA",
+  "description": "App Lamira Joias + provador com IA + dados online",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,7 +11,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "docx": "^9.7.1",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "pg": "^8.22.0"
   }
 }

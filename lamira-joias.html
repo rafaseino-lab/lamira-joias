@@ -282,7 +282,7 @@
         </div>
         <div style="flex:1;min-width:200px">
           <label>Tamanho</label>
-          <input type="range" id="pv-size" min="20" max="240" value="80">
+          <input type="range" id="pv-size" min="30" max="600" value="160">
           <label style="margin-top:12px">Girar</label>
           <input type="range" id="pv-rot" min="-180" max="180" value="0">
           <div style="margin-top:14px" class="row-flex">
@@ -394,16 +394,53 @@ const DEFAULT_SERVICOS=[
 ];
 
 let db=load();
-function load(){
-  try{const d=JSON.parse(localStorage.getItem(KEY));if(d){if(!d.config.servicos)d.config.servicos=DEFAULT_SERVICOS;return d;}}catch(e){}
-  return {
-    vendas:[],
-    funcionarias:['Balcão'],
-    estoque:[],
-    config:{comPerf:5, tatTipo:'nenhum', tatVal:0, aiUrl:'', servicos:DEFAULT_SERVICOS, adminPin:'', funcPin:''}
-  };
+let pendingSave=false, saveTimer=null;
+function defaults(){return {vendas:[],funcionarias:['Balcão'],estoque:[],deletedVendaIds:[],
+  config:{comPerf:5,tatTipo:'nenhum',tatVal:0,aiUrl:'',servicos:DEFAULT_SERVICOS,adminPin:'',funcPin:''}};}
+function ensureDefaults(d){
+  if(!d.config)d.config={};
+  const c=defaults().config;for(const k in c)if(d.config[k]===undefined)d.config[k]=c[k];
+  if(!Array.isArray(d.vendas))d.vendas=[];if(!Array.isArray(d.estoque))d.estoque=[];
+  if(!Array.isArray(d.funcionarias)||!d.funcionarias.length)d.funcionarias=['Balcão'];
+  if(!Array.isArray(d.deletedVendaIds))d.deletedVendaIds=[];
+  return d;
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(db));}
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return ensureDefaults(d);}catch(e){}
+  return defaults();
+}
+function apiBase(){return (db.config.aiUrl||'').replace(/\/+$/,'');}
+function save(){
+  db.updatedAt=Date.now();
+  localStorage.setItem(KEY,JSON.stringify(db));
+  pendingSave=true;clearTimeout(saveTimer);saveTimer=setTimeout(pushToServer,700);
+}
+async function pushToServer(){
+  try{
+    const r=await fetch(apiBase()+'/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(db)});
+    if(r.ok){const j=await r.json();if(j&&j.data){db=ensureDefaults(j.data);localStorage.setItem(KEY,JSON.stringify(db));}}
+    pendingSave=false;
+  }catch(e){/* offline: continua salvo no aparelho e tenta na proxima */}
+}
+async function pullFromServer(initial){
+  try{
+    const r=await fetch(apiBase()+'/api/data');
+    if(!r.ok)return;
+    const j=await r.json();
+    if(j&&j.data){
+      const sv=ensureDefaults(j.data);
+      if(initial||(!pendingSave&&(sv.updatedAt||0)>(db.updatedAt||0))){
+        db=sv;localStorage.setItem(KEY,JSON.stringify(db));if(!initial)rerender();
+      }
+    }else if(initial){pushToServer();}
+  }catch(e){}
+}
+function rerender(){
+  fillFuncSelects();fillServicoSelect();fillEstoqueSelect();applyRole();
+  const active=document.querySelector('nav button[data-tab].active');
+  const tab=active?active.dataset.tab:'venda';
+  ({caixa:renderCaixa,comissoes:renderComissoes,relatorio:renderRelatorio,estoque:renderEstoque,historico:renderHistorico,config:renderConfig}[tab]||function(){})();
+}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
 /* ---------- ACESSO (CEO x Funcionária) ---------- */
@@ -708,7 +745,9 @@ function renderHistorico(){
 }
 function excluirVenda(id){
   if(!confirm('Excluir esta venda?'))return;
-  db.vendas=db.vendas.filter(v=>v.id!==id);save();renderHistorico();
+  db.vendas=db.vendas.filter(v=>v.id!==id);
+  (db.deletedVendaIds=db.deletedVendaIds||[]).push(id);
+  save();renderHistorico();
 }
 function exportarCSV(){
   const head=['Data','Tipo','Item','Funcionaria','Pagamento','Valor','Comissao'];
@@ -733,7 +772,7 @@ function exportarQuickBooks(){
 }
 
 /* ---------- PROVADOR ---------- */
-let pvState={x:null,y:null,size:80,rot:0,flip:false,drag:false,dx:0,dy:0};
+let pvState={x:null,y:null,size:160,rot:0,flip:false,drag:false,dx:0,dy:0};
 const svg=s=>'data:image/svg+xml;utf8,'+encodeURIComponent(s);
 const PV_SAMPLES=[
   ['Borboleta (branca/dourada)', svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 90"><circle cx="30" cy="8" r="5" fill="none" stroke="#c9a24b" stroke-width="3"/><line x1="30" y1="13" x2="30" y2="42" stroke="#c9a24b" stroke-width="3"/><g stroke="#c9a24b" stroke-width="2.5"><path d="M30 60 C10 40 6 60 18 66 C26 70 30 66 30 60Z" fill="#f7f1ea"/><path d="M30 60 C50 40 54 60 42 66 C34 70 30 66 30 60Z" fill="#f3ebe0"/><path d="M30 62 C18 62 16 78 26 80 C30 81 30 74 30 62Z" fill="#faf6f0"/><path d="M30 62 C42 62 44 78 34 80 C30 81 30 74 30 62Z" fill="#f0e6d8"/></g></svg>')],
@@ -769,7 +808,7 @@ function pvSetEarring(src){
   const e=document.getElementById('pv-earring');e.src=src;e.style.display='block';
   const st=document.getElementById('pv-stage');
   pvState.x=st.clientWidth/2;pvState.y=st.clientHeight/2;
-  pvState.size=Number(document.getElementById('pv-size').value)||80;
+  pvState.size=Number(document.getElementById('pv-size').value)||160;
   pvState.rot=Number(document.getElementById('pv-rot').value)||0;
   pvRender();
 }
@@ -788,7 +827,7 @@ function pvReset(){
   document.getElementById('pv-placeholder').style.display='flex';
   document.getElementById('pv-photo-in').value='';document.getElementById('pv-earring-in').value='';
   document.getElementById('pv-earring-sel').value='';
-  pvState={x:null,y:null,size:80,rot:0,flip:false,drag:false,dx:0,dy:0};
+  pvState={x:null,y:null,size:160,rot:0,flip:false,drag:false,dx:0,dy:0};
 }
 (function pvDragSetup(){
   const e=document.getElementById('pv-earring'),st=document.getElementById('pv-stage');
@@ -906,7 +945,12 @@ function initAll(){
   document.getElementById('cx-de').value=today();
   document.getElementById('cx-ate').value=today();
   fillFuncSelects();fillServicoSelect();fillEstoqueSelect();updateVendaUI();
-  if(db.config.adminPin){lockApp();}else{role='ceo';applyRole();}
+  role='ceo';applyRole();
+  pullFromServer(true).then(()=>{
+    rerender();
+    if(db.config.adminPin){lockApp();}
+    setInterval(()=>pullFromServer(false),15000);
+  });
 }
 initAll();
 </script>
