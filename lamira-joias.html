@@ -240,7 +240,7 @@
         <label>Recorte da joia</label>
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
           <div style="background:repeating-conic-gradient(#e7e7e7 0 25%, #fff 0 50%) 50%/16px 16px;border:1px solid var(--line);border-radius:10px;padding:6px">
-            <canvas id="e-prev" style="max-width:150px;max-height:150px;display:block"></canvas>
+            <canvas id="e-prev" title="Clique numa área para apagar (ex: o miolo)" style="max-width:150px;max-height:150px;display:block;cursor:crosshair"></canvas>
           </div>
           <div style="flex:1;min-width:190px">
             <label>Sensibilidade do recorte</label>
@@ -250,7 +250,7 @@
               <button class="btn ghost sm" onclick="usarOriginal()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg>Original</button>
               <button class="btn ghost sm" onclick="removerFundoRapido()">Modo rápido</button>
             </div>
-            <p class="muted" style="margin-top:8px">O recorte com IA funciona em quase qualquer foto (a 1ª vez demora uns segundos pra carregar). Se não tiver internet, use o <b>Modo rápido</b> (foto em fundo branco liso). Ajuste a sensibilidade só no modo rápido.</p>
+            <p class="muted" style="margin-top:8px">O recorte com IA funciona em quase qualquer foto (a 1ª vez demora uns segundos pra carregar). Se não tiver internet, use o <b>Modo rápido</b>. <b>Clique numa área do preview</b> para apagar o que sobrar (ex: o miolo preto da joia). A sensibilidade também controla o quanto o clique apaga.</p>
           </div>
         </div>
       </div>
@@ -674,6 +674,25 @@ function desenhaPreview(data){
     c.width=im.width;c.height=im.height;c.getContext('2d').clearRect(0,0,c.width,c.height);
     c.getContext('2d').drawImage(im,0,0);};im.src=data;
 }
+// borracha por clique: apaga a região clicada (ex: o miolo preto da joia)
+document.getElementById('e-prev').onclick=function(ev){
+  if(!estoqueImg)return;
+  const c=this,rect=c.getBoundingClientRect();
+  const sx=Math.floor((ev.clientX-rect.left)/rect.width*c.width);
+  const sy=Math.floor((ev.clientY-rect.top)/rect.height*c.height);
+  const im=new Image();im.onload=()=>{
+    const w=im.width,h=im.height;const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    const ctx=cv.getContext('2d');ctx.drawImage(im,0,0);const id=ctx.getImageData(0,0,w,h),d=id.data;
+    if(sx<0||sy<0||sx>=w||sy>=h)return;const si=(sy*w+sx)*4;if(d[si+3]===0)return;
+    const sr=d[si],sg=d[si+1],sb=d[si+2];const tol=Number(document.getElementById('e-tol').value)||55,tol2=tol*tol*1.6;
+    const st=[sy*w+sx],vis=new Uint8Array(w*h);
+    while(st.length){const p=st.pop();if(vis[p])continue;vis[p]=1;const i=p*4;
+      if(d[i+3]===0)continue;const dr=d[i]-sr,dg=d[i+1]-sg,db=d[i+2]-sb;
+      if(dr*dr+dg*dg+db*db>tol2)continue;d[i+3]=0;const x=p%w,y=(p/w)|0;
+      if(x>0)st.push(p-1);if(x<w-1)st.push(p+1);if(y>0)st.push(p-w);if(y<h-1)st.push(p+w);}
+    ctx.putImageData(id,0,0);estoqueImg=cv.toDataURL('image/png');desenhaPreview(estoqueImg);toast('Área apagada ✓');
+  };im.src=estoqueImg;
+};
 function usarOriginal(){estoqueImg=estoqueImgOrig;desenhaPreview(estoqueImg);}
 function blobToDataURL(b){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b);});}
 function finalizeCutout(dataUrl){
