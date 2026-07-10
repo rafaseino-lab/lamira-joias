@@ -889,20 +889,22 @@ function pvReset(){
   e.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
   e.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
 })();
-function pvDownload(){
+function pvComposite(){
   const photo=document.getElementById('pv-photo'),ear=document.getElementById('pv-earring'),st=document.getElementById('pv-stage');
-  if(photo.style.display==='none'){toast('Envie a foto primeiro');return;}
+  if(photo.style.display==='none')return null;
   const W=st.clientWidth,H=st.clientHeight;
   const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');
-  // desenha a foto simulando object-fit: cover
   const iw=photo.naturalWidth,ih=photo.naturalHeight,sc=Math.max(W/iw,H/ih);
   const dw=iw*sc,dh=ih*sc;ctx.drawImage(photo,(W-dw)/2,(H-dh)/2,dw,dh);
-  // desenha o brinco
   if(ear.style.display!=='none'&&ear.src){
     const ar=ear.naturalHeight/ear.naturalWidth||1;const w=pvState.size,h=w*ar;
     ctx.save();ctx.translate(pvState.x,pvState.y);ctx.rotate(pvState.rot*Math.PI/180);
     ctx.scale(pvState.flip?-1:1,1);ctx.drawImage(ear,-w/2,-h/2,w,h);ctx.restore();
   }
+  return c;
+}
+function pvDownload(){
+  const c=pvComposite();if(!c){toast('Envie a foto primeiro');return;}
   c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='provador-lamira.png';a.click();},'image/png');
   toast('Imagem salva ✓');
 }
@@ -921,9 +923,15 @@ async function pvGerarIA(){
   const out=document.getElementById('pv-ia-result');
   out.innerHTML='<p class="muted">A IA está encaixando a joia na orelha…</p>';
   try{
-    const earPng=await pvToPng(photo.src);
+    const comp=pvComposite();
+    const earPng=comp?comp.toDataURL('image/png'):await pvToPng(photo.src);
     const jewPng=await pvToPng(ear.src);
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ear:earPng,jewelry:jewPng})});
+    const prompt='A primeira imagem é uma montagem: a joia foi colada por cima da orelha, aproximadamente no tamanho e na posição desejados. '+
+      'Gere uma versão fotorrealista mantendo EXATAMENTE o mesmo tamanho, a mesma posição e o mesmo desenho da joia da montagem, '+
+      'apenas integrando-a de forma natural — com iluminação, reflexos, sombra e perspectiva coerentes com a orelha. '+
+      'A segunda imagem é a joia em detalhe, use-a como referência de cor e formato. '+
+      'Não altere o rosto, o cabelo, o tom de pele nem a forma da orelha. Resultado limpo e realista.';
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ear:earPng,jewelry:jewPng,prompt:prompt})});
     const data=await r.json();
     if(!r.ok||!data.image)throw new Error(data.error||'falha na geração');
     out.innerHTML='<h2 style="margin:0 0 10px">Resultado realista (IA)</h2>'+
