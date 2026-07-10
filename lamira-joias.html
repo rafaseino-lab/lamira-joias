@@ -68,7 +68,7 @@
   #pv-photo{width:100%;height:100%;object-fit:cover;display:none}
   #pv-earring{position:absolute;left:50%;top:50%;width:80px;transform:translate(-50%,-50%) rotate(0deg);display:none;cursor:move;user-select:none;-webkit-user-drag:none}
   input[type=range]{width:100%;accent-color:var(--rose)}
-  .thumb{width:34px;height:34px;object-fit:cover;border-radius:6px;vertical-align:middle;border:1px solid var(--line)}
+  .thumb{width:42px;height:42px;object-fit:contain;background:#faf6f3;border-radius:9px;vertical-align:middle;border:1px solid var(--line);padding:3px;margin-right:4px}
   @media(max-width:600px){nav button{padding:8px 10px;font-size:13px}}
 </style>
 </head>
@@ -246,10 +246,11 @@
             <label>Sensibilidade do recorte</label>
             <input type="range" id="e-tol" min="10" max="130" value="55">
             <div class="row-flex" style="margin-top:10px">
-              <button class="btn ghost sm" onclick="removerFundo()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><line x1="8.1" y1="7.6" x2="20" y2="17.5"/><line x1="8.1" y1="16.4" x2="20" y2="6.5"/></svg>Remover fundo</button>
+              <button class="btn sm" id="e-bg-btn" onclick="removerFundo()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7z"/></svg>Remover fundo</button>
               <button class="btn ghost sm" onclick="usarOriginal()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg>Original</button>
+              <button class="btn ghost sm" onclick="removerFundoRapido()">Modo rápido</button>
             </div>
-            <p class="muted" style="margin-top:8px">Melhor resultado: joia em <b>fundo branco/liso, sem segurar com a mão</b>. Ajuste a sensibilidade e clique em Remover fundo.</p>
+            <p class="muted" style="margin-top:8px">O recorte com IA funciona em quase qualquer foto (a 1ª vez demora uns segundos pra carregar). Se não tiver internet, use o <b>Modo rápido</b> (foto em fundo branco liso). Ajuste a sensibilidade só no modo rápido.</p>
           </div>
         </div>
       </div>
@@ -674,7 +675,35 @@ function desenhaPreview(data){
     c.getContext('2d').drawImage(im,0,0);};im.src=data;
 }
 function usarOriginal(){estoqueImg=estoqueImgOrig;desenhaPreview(estoqueImg);}
-function removerFundo(){
+function blobToDataURL(b){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b);});}
+function finalizeCutout(dataUrl){
+  const im=new Image();im.onload=()=>{
+    const w=im.width,h=im.height;const c=document.createElement('canvas');c.width=w;c.height=h;
+    const ctx=c.getContext('2d');ctx.drawImage(im,0,0);const d=ctx.getImageData(0,0,w,h).data;
+    let minx=w,miny=h,maxx=0,maxy=0,found=false;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(d[(y*w+x)*4+3]>12){found=true;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;}}
+    let out;
+    if(found){const pad=6,cw=maxx-minx+1+pad*2,ch=maxy-miny+1+pad*2;const c2=document.createElement('canvas');c2.width=cw;c2.height=ch;
+      c2.getContext('2d').drawImage(c,minx,miny,maxx-minx+1,maxy-miny+1,pad,pad,maxx-minx+1,maxy-miny+1);out=c2.toDataURL('image/png');}
+    else out=dataUrl;
+    estoqueImg=out;desenhaPreview(out);
+  };im.src=dataUrl;
+}
+async function removerFundo(){
+  if(!estoqueImgOrig){toast('Escolha a foto primeiro');return;}
+  const btn=document.getElementById('e-bg-btn');const old=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.textContent='Removendo… (1ª vez demora)';}
+  try{
+    const mod=await import('https://esm.sh/@imgly/background-removal@1');
+    const blob=await mod.removeBackground(estoqueImgOrig);
+    const url=await blobToDataURL(blob);
+    finalizeCutout(url);toast('Fundo removido (IA) ✓');
+  }catch(e){
+    toast('IA indisponível — usando modo rápido');
+    removerFundoRapido();
+  }finally{if(btn){btn.disabled=false;btn.innerHTML=old;}}
+}
+function removerFundoRapido(){
   const tol=Number(document.getElementById('e-tol').value)||55;
   const im=new Image();im.onload=()=>{
     const w=im.width,h=im.height,N=w*h;
