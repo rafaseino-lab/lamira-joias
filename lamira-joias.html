@@ -18,22 +18,29 @@
   .wm-main{font-family:'Cormorant Garamond',Georgia,serif;font-size:46px;font-weight:600;letter-spacing:12px;line-height:1;color:var(--gold);padding-left:12px}
   .wm-sub{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:500;letter-spacing:9px;color:var(--gold-soft);margin-top:6px;padding-left:9px}
   @media(max-width:520px){.wm-main{font-size:34px;letter-spacing:8px}.wm-sub{font-size:12px;letter-spacing:6px}}
-  nav{display:flex;gap:4px;background:#fff;padding:6px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;z-index:5}
-  nav button{border:none;background:transparent;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);font-weight:500}
-  nav button.active{background:var(--rose);color:#fff}
+  nav{display:flex;gap:2px;background:#fff;padding:9px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;z-index:5}
+  nav button{display:inline-flex;align-items:center;border:none;background:transparent;padding:9px 15px;border-radius:10px;cursor:pointer;font-size:13.5px;color:var(--muted);font-weight:500;letter-spacing:.3px;transition:background .15s,color .15s}
+  nav button:hover{color:var(--rose-dark);background:#faf6f3}
+  nav button.active{background:var(--blush);color:var(--rose-dark)}
+  nav button.active .ic{color:var(--gold)}
+  .ic{width:16px;height:16px;vertical-align:-3px;margin-right:8px;flex-shrink:0;stroke-width:1.5}
   main{max-width:1000px;margin:0 auto;padding:22px 16px 60px}
   .tab{display:none}
   .tab.active{display:block}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
-  h2{font-size:16px;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 1px 2px rgba(44,36,34,.04)}
+  h2{font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;font-weight:600;letter-spacing:.4px;margin:0 0 16px;color:var(--rose-dark)}
   label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
   input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink)}
   input:focus,select:focus{outline:none;border-color:var(--rose)}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-  .btn{background:var(--rose);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;justify-content:center;background:var(--rose);color:#fff;border:none;padding:11px 22px;border-radius:11px;font-size:14px;font-weight:600;letter-spacing:.3px;cursor:pointer;transition:background .15s,opacity .15s}
   .btn:hover{background:var(--rose-dark)}
+  .btn .ic{width:16px;height:16px;margin-right:8px;vertical-align:middle}
   .btn.gold{background:var(--gold)}
-  .btn.ghost{background:transparent;color:var(--rose);border:1px solid var(--rose)}
+  .btn.gold:hover{background:#96762a}
+  .btn.ghost{background:transparent;color:var(--rose-dark);border:1px solid var(--line)}
+  .btn.ghost:hover{background:#faf6f3;border-color:var(--rose)}
+  .btn.ghost .ic{color:var(--rose)}
   .btn.sm{padding:6px 12px;font-size:12px}
   .btn.danger{background:transparent;color:var(--red);border:1px solid var(--red)}
   table{width:100%;border-collapse:collapse;font-size:13px}
@@ -82,15 +89,15 @@
 </div>
 
 <nav>
-  <button data-tab="venda" class="active">➕ Nova venda</button>
-  <button data-tab="caixa">💰 Caixa</button>
-  <button data-tab="comissoes">👩 Comissões</button>
-  <button data-tab="relatorio">📊 Relatório</button>
-  <button data-tab="estoque">💎 Estoque</button>
-  <button data-tab="provador">👂 Provador</button>
-  <button data-tab="historico">📋 Histórico</button>
-  <button data-tab="config">⚙️ Config</button>
-  <button id="nav-logout" onclick="logoutRole()" style="display:none;margin-left:auto;color:var(--rose-dark)">🔒 Sair</button>
+  <button data-tab="venda" class="active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nova venda</button>
+  <button data-tab="caixa"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="19" height="11" rx="2"/><circle cx="12" cy="12" r="2.4"/><path d="M6 12h.01M18 12h.01"/></svg>Caixa</button>
+  <button data-tab="comissoes"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.5a4 4 0 0 0-3-3.85"/><path d="M15.5 5a3.2 3.2 0 0 1 0 6"/></svg>Comissões</button>
+  <button data-tab="relatorio"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 16v-4"/><path d="M13 16V8"/><path d="M18 16v-6"/></svg>Relatório</button>
+  <button data-tab="estoque"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5h14l3 6-10 11.5L2 9.5z"/><path d="M2.2 9.5h19.6"/><path d="M9.5 3.5 12 9.5l-2.5 8"/><path d="M14.5 3.5 12 9.5l2.5 8"/></svg>Estoque</button>
+  <button data-tab="provador"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9a5.5 5.5 0 1 1 9.3 4c-1 1-1.8 1.6-1.8 3A3 3 0 0 1 9 18.6"/><path d="M9.5 9.2A2.6 2.6 0 0 1 14 11"/></svg>Provador</button>
+  <button data-tab="historico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>Histórico</button>
+  <button data-tab="config"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="8" cy="17" r="2.1"/></svg>Config</button>
+  <button id="nav-logout" onclick="logoutRole()" style="display:none;margin-left:auto;color:var(--rose-dark)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M11 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>Sair</button>
 </nav>
 
 <main>
@@ -239,8 +246,8 @@
             <label>Sensibilidade do recorte</label>
             <input type="range" id="e-tol" min="10" max="130" value="55">
             <div class="row-flex" style="margin-top:10px">
-              <button class="btn ghost sm" onclick="removerFundo()">✂ Remover fundo</button>
-              <button class="btn ghost sm" onclick="usarOriginal()">↺ Original</button>
+              <button class="btn ghost sm" onclick="removerFundo()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><line x1="8.1" y1="7.6" x2="20" y2="17.5"/><line x1="8.1" y1="16.4" x2="20" y2="6.5"/></svg>Remover fundo</button>
+              <button class="btn ghost sm" onclick="usarOriginal()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg>Original</button>
             </div>
             <p class="muted" style="margin-top:8px">Melhor resultado: joia em <b>fundo branco/liso, sem segurar com a mão</b>. Ajuste a sensibilidade e clique em Remover fundo.</p>
           </div>
@@ -277,7 +284,7 @@
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
         <div id="pv-stage">
           <img id="pv-photo" alt="">
-          <div id="pv-placeholder" class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">Envie a foto da orelha 👂</div>
+          <div id="pv-placeholder" class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">Envie a foto da orelha</div>
           <img id="pv-earring" alt="" draggable="false">
         </div>
         <div style="flex:1;min-width:200px">
@@ -286,14 +293,14 @@
           <label style="margin-top:12px">Girar</label>
           <input type="range" id="pv-rot" min="-180" max="180" value="0">
           <div style="margin-top:14px" class="row-flex">
-            <button class="btn ghost sm" onclick="pvFlip()">↔ Espelhar</button>
+            <button class="btn ghost sm" onclick="pvFlip()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/></svg>Espelhar</button>
             <button class="btn ghost sm" onclick="pvReset()">Limpar</button>
           </div>
           <div style="margin-top:16px" class="row-flex">
-            <button class="btn gold" onclick="pvDownload()">⬇ Baixar imagem</button>
-            <button class="btn" id="pv-ia-btn" onclick="pvGerarIA()">✨ Versão realista (IA)</button>
+            <button class="btn gold" onclick="pvDownload()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>Baixar imagem</button>
+            <button class="btn" id="pv-ia-btn" onclick="pvGerarIA()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7z"/><path d="M18.5 14.5l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z"/></svg>Versão realista (IA)</button>
           </div>
-          <p class="muted" style="margin-top:10px">Dica: arraste o brinco com o dedo/mouse direto na foto. A IA precisa do servidor configurado em ⚙️ Config.</p>
+          <p class="muted" style="margin-top:10px">Dica: arraste o brinco com o dedo/mouse direto na foto. A IA precisa do servidor configurado em Config.</p>
         </div>
       </div>
       <div id="pv-ia-result" style="margin-top:16px"></div>
@@ -306,8 +313,8 @@
       <div class="row-flex" style="justify-content:space-between">
         <h2 style="margin:0">Histórico de vendas</h2>
         <div class="row-flex">
-          <button class="btn ghost sm" onclick="exportarCSV()">⬇ CSV completo</button>
-          <button class="btn gold sm" onclick="exportarQuickBooks()">⬇ QuickBooks</button>
+          <button class="btn ghost sm" onclick="exportarCSV()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>CSV completo</button>
+          <button class="btn gold sm" onclick="exportarQuickBooks()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>QuickBooks</button>
         </div>
       </div>
       <table style="margin-top:12px"><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Funcionária</th><th>Pgto</th><th class="right">Valor</th><th></th></tr></thead>
@@ -318,7 +325,7 @@
   <!-- ===== CONFIG ===== -->
   <section id="config" class="tab">
     <div class="card">
-      <h2>🔒 Acesso — CEO x Funcionária</h2>
+      <h2>Acesso — CEO e funcionária</h2>
       <div class="grid">
         <div><label>PIN do CEO (acesso total)</label><input type="text" id="cfg-admin-pin" inputmode="numeric" placeholder="ex: 2580"></div>
         <div><label>PIN da funcionária (só vendas e provador)</label><input type="text" id="cfg-func-pin" inputmode="numeric" placeholder="ex: 1111"></div>
@@ -367,7 +374,7 @@
       <h2>Dados</h2>
       <p class="muted">Tudo fica salvo neste navegador. Faça backup exportando de vez em quando.</p>
       <div class="row-flex">
-        <button class="btn ghost sm" onclick="backup()">⬇ Backup (JSON)</button>
+        <button class="btn ghost sm" onclick="backup()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>Backup (JSON)</button>
         <button class="btn danger sm" onclick="resetar()">Apagar tudo</button>
       </div>
     </div>
@@ -540,7 +547,7 @@ function updateVendaUI(){
   wrap.style.display=(tipo==='Joia'||tipo==='Piercing')?'block':'none';
   const c=comissaoDaVenda({tipo,valor:document.getElementById('v-valor').value});
   const prev=document.getElementById('v-comissao-preview');
-  if(c>0)prev.innerHTML=`💡 Comissão da funcionária nesta venda: <b>${money(c)}</b>`;
+  if(c>0)prev.innerHTML=`Comissão da funcionária nesta venda: <b>${money(c)}</b>`;
   else prev.textContent='';
 }
 function registrarVenda(){
@@ -732,7 +739,7 @@ function renderEstoque(){
   b.innerHTML=db.estoque.map((p,i)=>{
     const low=p.qtd<=p.min?'stock-low':'';
     const th=p.img?`<img src="${p.img}" class="thumb"> `:'';
-    return `<tr><td>${th}${p.nome}${p.qtd<=p.min?' ⚠️':''}</td><td>${p.cat}</td><td class="right">${money(p.preco)}</td>
+    return `<tr><td>${th}${p.nome}${p.qtd<=p.min?' <span style="font-size:10px;color:var(--red);font-weight:600;letter-spacing:.5px;vertical-align:1px">BAIXO</span>':''}</td><td>${p.cat}</td><td class="right">${money(p.preco)}</td>
       <td class="right ${low}">${p.qtd}</td>
       <td class="right">
         <button class="btn ghost sm" onclick="ajustaEstoque(${i},1)">+</button>
@@ -891,10 +898,10 @@ async function pvGerarIA(){
     if(!r.ok||!data.image)throw new Error(data.error||'falha na geração');
     out.innerHTML='<h2 style="margin:0 0 10px">Resultado realista (IA)</h2>'+
       '<img src="'+data.image+'" style="max-width:360px;width:100%;border-radius:12px;border:1px solid var(--line)">'+
-      '<div style="margin-top:10px"><a class="btn gold sm" href="'+data.image+'" download="provador-ia-lamira.png">⬇ Baixar</a></div>';
+      '<div style="margin-top:10px"><a class="btn gold sm" href="'+data.image+'" download="provador-ia-lamira.png"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/></svg>Baixar</a></div>';
     toast('Imagem realista gerada ✓');
   }catch(e){
-    out.innerHTML='<p style="color:var(--red)">Não deu pra gerar: '+e.message+'</p><p class="muted">Confira se o servidor de IA está publicado e a URL está em ⚙️ Config. Veja o GUIA-IA.</p>';
+    out.innerHTML='<p style="color:var(--red)">Não deu pra gerar: '+e.message+'</p><p class="muted">Confira se o servidor de IA está publicado e a URL está em Config. Veja o GUIA-IA.</p>';
   }finally{btn.disabled=false;btn.textContent=old;}
 }
 function salvarAiUrl(){db.config.aiUrl=document.getElementById('cfg-ai-url').value.trim();save();toast('Servidor salvo ✓');}
