@@ -926,12 +926,23 @@ async function pvGerarIA(){
     const comp=pvComposite();
     const earPng=comp?comp.toDataURL('image/png'):await pvToPng(photo.src);
     const jewPng=await pvToPng(ear.src);
-    const prompt='A primeira imagem é uma montagem: a joia foi colada por cima da orelha, aproximadamente no tamanho e na posição desejados. '+
-      'Gere uma versão fotorrealista mantendo EXATAMENTE o mesmo tamanho, a mesma posição e o mesmo desenho da joia da montagem, '+
-      'apenas integrando-a de forma natural — com iluminação, reflexos, sombra e perspectiva coerentes com a orelha. '+
-      'A segunda imagem é a joia em detalhe, use-a como referência de cor e formato. '+
-      'Não altere o rosto, o cabelo, o tom de pele nem a forma da orelha. Resultado limpo e realista.';
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ear:earPng,jewelry:jewPng,prompt:prompt})});
+    // máscara: a IA só pode alterar a região da joia (o resto da orelha fica intacto -> trava a posição)
+    let maskPng=null;
+    if(comp){
+      const st=document.getElementById('pv-stage'),W=st.clientWidth,H=st.clientHeight;
+      const mk=document.createElement('canvas');mk.width=W;mk.height=H;const mc=mk.getContext('2d');
+      mc.fillStyle='#ffffff';mc.fillRect(0,0,W,H);
+      const ar=ear.naturalHeight/ear.naturalWidth||1,jw=pvState.size,jh=jw*ar;
+      mc.globalCompositeOperation='destination-out';
+      mc.beginPath();mc.ellipse(pvState.x,pvState.y,Math.max(jw*0.85,jh*0.85),Math.max(jw*0.85,jh*0.85),0,0,Math.PI*2);mc.fill();
+      maskPng=mk.toDataURL('image/png');
+    }
+    const prompt='A primeira imagem é uma montagem: a joia foi colada sobre a orelha na posição e no tamanho desejados. '+
+      'Deixe SOMENTE a área da joia com aparência fotorrealista — integre a joia com iluminação, reflexos e sombra naturais, '+
+      'mantendo EXATAMENTE a posição, o tamanho e o desenho da joia. Se houver furo/vazado na joia, mostre a pele da orelha através dele (nunca preto). '+
+      'A segunda imagem é a joia em detalhe (referência de cor e formato). '+
+      'Não altere o rosto, o cabelo, o tom de pele nem a forma da orelha.';
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ear:earPng,jewelry:jewPng,mask:maskPng,prompt:prompt})});
     const data=await r.json();
     if(!r.ok||!data.image)throw new Error(data.error||'falha na geração');
     out.innerHTML='<h2 style="margin:0 0 10px">Resultado realista (IA)</h2>'+

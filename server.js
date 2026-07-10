@@ -92,13 +92,14 @@ app.post('/api/provador', async (req, res) => {
   try {
     const key = process.env.OPENAI_API_KEY;
     if (!key) return res.status(500).json({ error: 'OPENAI_API_KEY não configurada no servidor.' });
-    const { ear, jewelry, prompt } = req.body || {};
+    const { ear, jewelry, prompt, mask } = req.body || {};
     if (!ear || !jewelry) return res.status(400).json({ error: 'Envie a foto da orelha e da joia.' });
     const e = dataUrlToBuffer(ear), j = dataUrlToBuffer(jewelry);
     const form = new FormData();
     form.append('model', 'gpt-image-1');
     form.append('image[]', new Blob([e.buf], { type: e.type || 'image/png' }), 'orelha.png');
     form.append('image[]', new Blob([j.buf], { type: j.type || 'image/png' }), 'joia.png');
+    if (mask) { const mk = dataUrlToBuffer(mask); form.append('mask', new Blob([mk.buf], { type: mk.type || 'image/png' }), 'mask.png'); }
     form.append('prompt', prompt || PROMPT_PADRAO);
     form.append('size', '1024x1024');
     form.append('input_fidelity', 'high');
