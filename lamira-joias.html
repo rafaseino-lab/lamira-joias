@@ -670,22 +670,36 @@ function usarOriginal(){estoqueImg=estoqueImgOrig;desenhaPreview(estoqueImg);}
 function removerFundo(){
   const tol=Number(document.getElementById('e-tol').value)||55;
   const im=new Image();im.onload=()=>{
-    const w=im.width,h=im.height;
+    const w=im.width,h=im.height,N=w*h;
     const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
     ctx.drawImage(im,0,0);const id=ctx.getImageData(0,0,w,h),d=id.data;
     // cor de fundo = média dos 4 cantos
     const cor=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]];let br=0,bg=0,bb=0;
     cor.forEach(([x,y])=>{const i=(y*w+x)*4;br+=d[i];bg+=d[i+1];bb+=d[i+2];});br/=4;bg/=4;bb/=4;
-    const vis=new Uint8Array(w*h),st=[],tol2=tol*tol;
+    const removed=new Uint8Array(N),st=[],tol2=tol*tol,globTol2=(tol*0.9)*(tol*0.9);
+    // 1) crescimento a partir das bordas (come sombras suaves, comparando com o vizinho)
     for(let x=0;x<w;x++){st.push(x);st.push((h-1)*w+x);}
     for(let y=0;y<h;y++){st.push(y*w);st.push(y*w+w-1);}
-    while(st.length){const p=st.pop();if(vis[p])continue;vis[p]=1;const i=p*4;
-      const dr=d[i]-br,dg=d[i+1]-bg,db=d[i+2]-bb;
-      if(dr*dr+dg*dg+db*db>tol2)continue;
-      d[i+3]=0;const x=p%w,y=(p/w)|0;
-      if(x>0)st.push(p-1);if(x<w-1)st.push(p+1);if(y>0)st.push(p-w);if(y<h-1)st.push(p+w);}
+    while(st.length){const p=st.pop();if(removed[p])continue;removed[p]=1;
+      const i=p*4,r=d[i],g=d[i+1],b=d[i+2],x=p%w,y=(p/w)|0;
+      const nb=[];if(x>0)nb.push(p-1);if(x<w-1)nb.push(p+1);if(y>0)nb.push(p-w);if(y<h-1)nb.push(p+w);
+      for(const q of nb){if(removed[q])continue;const j=q*4,dr=d[j]-r,dg=d[j+1]-g,db=d[j+2]-b;
+        if(dr*dr+dg*dg+db*db<=tol2)st.push(q);}}
+    for(let p=0;p<N;p++)if(removed[p])d[p*4+3]=0;
+    // 2) remove fundo "preso" dentro de furos (mesma cor do fundo)
+    for(let p=0;p<N;p++){if(d[p*4+3]===0)continue;const i=p*4,dr=d[i]-br,dg=d[i+1]-bg,db=d[i+2]-bb;
+      if(dr*dr+dg*dg+db*db<=globTol2)d[i+3]=0;}
+    // 3) mantém só o maior pedaço conectado (descarta manchas soltas/sombra)
+    const comp=new Int32Array(N).fill(-1);let best=-1,bestSize=0;
+    for(let p=0;p<N;p++){if(d[p*4+3]===0||comp[p]!==-1)continue;
+      const q=[p];comp[p]=p;let size=0;
+      while(q.length){const cur=q.pop();size++;const x=cur%w,y=(cur/w)|0;
+        const nb=[];if(x>0)nb.push(cur-1);if(x<w-1)nb.push(cur+1);if(y>0)nb.push(cur-w);if(y<h-1)nb.push(cur+w);
+        for(const nn of nb){if(d[nn*4+3]!==0&&comp[nn]===-1){comp[nn]=p;q.push(nn);}}}
+      if(size>bestSize){bestSize=size;best=p;}}
+    for(let p=0;p<N;p++){if(d[p*4+3]!==0&&comp[p]!==best)d[p*4+3]=0;}
     ctx.putImageData(id,0,0);
-    // recorta as bordas transparentes
+    // 4) recorta as bordas transparentes
     let minx=w,miny=h,maxx=0,maxy=0,found=false;
     for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(d[(y*w+x)*4+3]>10){found=true;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;}}
     let out;
