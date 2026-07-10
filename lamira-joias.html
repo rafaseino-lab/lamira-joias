@@ -68,7 +68,7 @@
   #pv-photo{width:100%;height:100%;object-fit:cover;display:none}
   #pv-earring{position:absolute;left:50%;top:50%;width:80px;transform:translate(-50%,-50%) rotate(0deg);display:none;cursor:move;user-select:none;-webkit-user-drag:none}
   input[type=range]{width:100%;accent-color:var(--rose)}
-  .thumb{width:42px;height:42px;object-fit:contain;background:#faf6f3;border-radius:9px;vertical-align:middle;border:1px solid var(--line);padding:3px;margin-right:4px}
+  .thumb{width:46px;height:46px;object-fit:cover;background:#faf6f3;border-radius:10px;vertical-align:middle;border:1px solid var(--line);margin-right:6px}
   @media(max-width:600px){nav button{padding:8px 10px;font-size:13px}}
 </style>
 </head>
@@ -752,10 +752,10 @@ function salvarPeca(){
     qtd:parseInt(document.getElementById('e-qtd').value)||0,
     preco:Number(document.getElementById('e-preco').value)||0,
     min:parseInt(document.getElementById('e-min').value)||0};
-  const imgData=estoqueImg;
+  const imgData=estoqueImg,imgOrig=estoqueImgOrig;
   const ex=db.estoque.find(x=>x.nome.toLowerCase()===nome.toLowerCase());
-  if(ex){ex.qtd+=p.qtd;ex.preco=p.preco||ex.preco;ex.min=p.min;if(imgData)ex.img=imgData;toast('Estoque reposto ✓');}
-  else{if(imgData)p.img=imgData;db.estoque.push(p);toast('Peça adicionada ✓');}
+  if(ex){ex.qtd+=p.qtd;ex.preco=p.preco||ex.preco;ex.min=p.min;if(imgData)ex.img=imgData;if(imgOrig)ex.imgOrig=imgOrig;toast('Estoque reposto ✓');}
+  else{if(imgData)p.img=imgData;if(imgOrig)p.imgOrig=imgOrig;db.estoque.push(p);toast('Peça adicionada ✓');}
   save();
   document.getElementById('e-nome').value='';document.getElementById('e-qtd').value='';
   document.getElementById('e-preco').value='';document.getElementById('e-img').value='';
@@ -767,7 +767,8 @@ function renderEstoque(){
   if(!db.estoque.length){b.innerHTML='<tr><td colspan="5" class="empty">Nenhuma peça cadastrada.</td></tr>';return;}
   b.innerHTML=db.estoque.map((p,i)=>{
     const low=p.qtd<=p.min?'stock-low':'';
-    const th=p.img?`<img src="${p.img}" class="thumb"> `:'';
+    const thumbSrc=p.imgOrig||p.img;
+    const th=thumbSrc?`<img src="${thumbSrc}" class="thumb"> `:'';
     return `<tr><td>${th}${p.nome}${p.qtd<=p.min?' <span style="font-size:10px;color:var(--red);font-weight:600;letter-spacing:.5px;vertical-align:1px">BAIXO</span>':''}</td><td>${p.cat}</td><td class="right">${money(p.preco)}</td>
       <td class="right ${low}">${p.qtd}</td>
       <td class="right">
